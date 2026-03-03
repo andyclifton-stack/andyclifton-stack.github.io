@@ -497,10 +497,23 @@ function renderGamePanel(gameName, options = {}) {
     )
     .join('');
 
-  const inGameHtml = game.inGame
-    .map((row) => {
+  const inGameWithMeter = game.inGame.map((row) => ({
+    row,
+    meter: getMeterPercent(row.value)
+  }));
+
+  const peakMeter = inGameWithMeter.reduce((max, item) => {
+    if (item.meter === null) return max;
+    return Math.max(max, item.meter);
+  }, -1);
+
+  const hasPeakMeter = peakMeter >= 0;
+
+  const inGameHtml = inGameWithMeter
+    .map(({ row, meter }) => {
       const valueClass = row.uncertain ? 'setting-value uncertain' : 'setting-value';
-      const meter = getMeterPercent(row.value);
+      const isPeak = hasPeakMeter && meter !== null && Math.abs(meter - peakMeter) < 0.001;
+      const rowClass = isPeak ? 'setting-row is-peak' : 'setting-row';
 
       const meterHtml = meter === null
         ? ''
@@ -508,11 +521,11 @@ function renderGamePanel(gameName, options = {}) {
             <div class="setting-meter">
               <span class="setting-meter-fill" data-target="${meter.toFixed(2)}"></span>
             </div>
-            <div class="setting-meter-caption">${Math.round(meter)}/100</div>
+            <div class="setting-meter-caption" data-target="${meter.toFixed(2)}">0/100</div>
           `;
 
       return `
-        <div class="setting-row">
+        <div class="${rowClass}">
           <div class="setting-top">
             <span class="setting-label">${escapeHtml(row.label)}</span>
             <span class="${valueClass}">${escapeHtml(row.value)}${row.uncertain ? ' (OCR)' : ''}</span>
@@ -579,32 +592,82 @@ function getMeterPercent(value) {
 }
 
 function animateMeters() {
-  const fills = viewRoot.querySelectorAll('.setting-meter-fill[data-target]');
+  const fills = [...viewRoot.querySelectorAll('.setting-meter-fill[data-target]')];
   if (!fills.length) return;
 
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const durationMs = 860;
+  const staggerMs = 28;
+  const startAt = performance.now();
 
-  fills.forEach((fill, index) => {
+  const tracks = fills.map((fill, index) => {
     const targetRaw = Number(fill.dataset.target);
     const target = Number.isFinite(targetRaw)
       ? Math.max(0, Math.min(100, targetRaw))
       : 0;
 
-    if (prefersReducedMotion) {
-      fill.style.width = `${target}%`;
-      fill.style.transitionDelay = '0ms';
-      return;
-    }
+    const row = fill.closest('.setting-row');
+    const caption = row?.querySelector('.setting-meter-caption[data-target]') ?? null;
 
     fill.style.width = '0%';
-    fill.style.transitionDelay = `${Math.min(index * 24, 240)}ms`;
+    if (caption) {
+      caption.textContent = '0/100';
+    }
 
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        fill.style.width = `${target}%`;
-      });
-    });
+    if (prefersReducedMotion) {
+      fill.style.width = `${target}%`;
+      if (caption) {
+        caption.textContent = `${Math.round(target)}/100`;
+      }
+      return null;
+    }
+
+    return {
+      fill,
+      caption,
+      target,
+      delay: Math.min(index * staggerMs, 260)
+    };
   });
+
+  if (prefersReducedMotion) {
+    return;
+  }
+
+  const liveTracks = tracks.filter(Boolean);
+  const easeOutCubic = (t) => 1 - ((1 - t) ** 3);
+
+  const tick = (now) => {
+    let stillAnimating = false;
+
+    liveTracks.forEach((track) => {
+      const elapsed = now - startAt - track.delay;
+
+      if (elapsed <= 0) {
+        stillAnimating = true;
+        return;
+      }
+
+      const progress = Math.min(elapsed / durationMs, 1);
+      const eased = easeOutCubic(progress);
+      const value = track.target * eased;
+
+      track.fill.style.width = `${value}%`;
+      if (track.caption) {
+        track.caption.textContent = `${Math.round(value)}/100`;
+      }
+
+      if (progress < 1) {
+        stillAnimating = true;
+      }
+    });
+
+    if (stillAnimating) {
+      requestAnimationFrame(tick);
+    }
+  };
+
+  requestAnimationFrame(tick);
 }
 
 function getFilteredGames(query) {

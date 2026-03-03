@@ -267,6 +267,12 @@ button:focus-visible {
   background: rgba(4, 13, 24, 0.84);
 }
 
+.setting-row.is-peak {
+  border-color: rgba(45, 212, 191, 0.56);
+  background: linear-gradient(150deg, rgba(5, 16, 28, 0.96), rgba(9, 31, 40, 0.84));
+  box-shadow: inset 0 0 0 1px rgba(45, 212, 191, 0.15);
+}
+
 .setting-top {
   display: grid;
   grid-template-columns: 1.15fr 1fr;
@@ -311,14 +317,27 @@ button:focus-visible {
   border-radius: inherit;
   background: linear-gradient(90deg, #22d3ee 0%, #2dd4bf 45%, #f59e0b 100%);
   box-shadow: 0 0 14px rgba(45, 212, 191, 0.35);
-  transition: width 760ms cubic-bezier(0.22, 1, 0.36, 1);
   will-change: width;
+}
+
+.setting-row.is-peak .setting-meter {
+  border-color: rgba(45, 212, 191, 0.64);
+  box-shadow: 0 0 0 1px rgba(45, 212, 191, 0.14), 0 0 14px rgba(45, 212, 191, 0.2);
+}
+
+.setting-row.is-peak .setting-meter > span {
+  box-shadow: 0 0 18px rgba(34, 211, 238, 0.5), 0 0 26px rgba(245, 158, 11, 0.24);
 }
 
 .setting-meter-caption {
   margin-top: 0.28rem;
   color: var(--muted);
   font-size: 0.72rem;
+}
+
+.setting-row.is-peak .setting-meter-caption {
+  color: #d5f7ff;
+  font-weight: 700;
 }
 
 .source-links {
@@ -363,6 +382,6 @@ button:focus-visible {
 
 @media (prefers-reduced-motion: reduce) {
   .setting-meter > span {
-    transition: none;
+    will-change: auto;
   }
 }
