@@ -307,9 +307,12 @@ button:focus-visible {
 .setting-meter > span {
   display: block;
   height: 100%;
+  width: 0;
   border-radius: inherit;
   background: linear-gradient(90deg, #22d3ee 0%, #2dd4bf 45%, #f59e0b 100%);
   box-shadow: 0 0 14px rgba(45, 212, 191, 0.35);
+  transition: width 760ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: width;
 }
 
 .setting-meter-caption {
@@ -355,5 +358,11 @@ button:focus-visible {
 
   .setting-value {
     text-align: left;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .setting-meter > span {
+    transition: none;
   }
 }

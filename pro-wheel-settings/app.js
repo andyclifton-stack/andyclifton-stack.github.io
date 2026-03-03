@@ -472,6 +472,7 @@ function renderPanels() {
 
   viewRoot.className = 'view single-layout';
   viewRoot.innerHTML = renderGamePanel(state.selectedGame, { title: 'Selected' });
+  animateMeters();
 }
 
 function renderGamePanel(gameName, options = {}) {
@@ -504,7 +505,9 @@ function renderGamePanel(gameName, options = {}) {
       const meterHtml = meter === null
         ? ''
         : `
-            <div class="setting-meter"><span style="width: ${meter}%"></span></div>
+            <div class="setting-meter">
+              <span class="setting-meter-fill" data-target="${meter.toFixed(2)}"></span>
+            </div>
             <div class="setting-meter-caption">${Math.round(meter)}/100</div>
           `;
 
@@ -573,6 +576,35 @@ function getMeterPercent(value) {
   }
 
   return null;
+}
+
+function animateMeters() {
+  const fills = viewRoot.querySelectorAll('.setting-meter-fill[data-target]');
+  if (!fills.length) return;
+
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  fills.forEach((fill, index) => {
+    const targetRaw = Number(fill.dataset.target);
+    const target = Number.isFinite(targetRaw)
+      ? Math.max(0, Math.min(100, targetRaw))
+      : 0;
+
+    if (prefersReducedMotion) {
+      fill.style.width = `${target}%`;
+      fill.style.transitionDelay = '0ms';
+      return;
+    }
+
+    fill.style.width = '0%';
+    fill.style.transitionDelay = `${Math.min(index * 24, 240)}ms`;
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        fill.style.width = `${target}%`;
+      });
+    });
+  });
 }
 
 function getFilteredGames(query) {
