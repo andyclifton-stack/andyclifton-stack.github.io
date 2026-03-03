@@ -502,18 +502,9 @@ function renderGamePanel(gameName, options = {}) {
     meter: getMeterPercent(row.value)
   }));
 
-  const peakMeter = inGameWithMeter.reduce((max, item) => {
-    if (item.meter === null) return max;
-    return Math.max(max, item.meter);
-  }, -1);
-
-  const hasPeakMeter = peakMeter >= 0;
-
   const inGameHtml = inGameWithMeter
     .map(({ row, meter }) => {
       const valueClass = row.uncertain ? 'setting-value uncertain' : 'setting-value';
-      const isPeak = hasPeakMeter && meter !== null && Math.abs(meter - peakMeter) < 0.001;
-      const rowClass = isPeak ? 'setting-row is-peak' : 'setting-row';
 
       const meterHtml = meter === null
         ? ''
@@ -525,7 +516,7 @@ function renderGamePanel(gameName, options = {}) {
           `;
 
       return `
-        <div class="${rowClass}">
+        <div class="setting-row">
           <div class="setting-top">
             <span class="setting-label">${escapeHtml(row.label)}</span>
             <span class="${valueClass}">${escapeHtml(row.value)}${row.uncertain ? ' (OCR)' : ''}</span>
