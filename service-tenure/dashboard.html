@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" id="theme-color-meta" content="#000000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="AC Dashboard">
+    <title>AC Dashboard v15</title>
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" href="icon.svg" type="image/svg+xml">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script>
+        try {
+            const savedTheme = localStorage.getItem('ac_dashboard_theme');
+            const preferredTheme = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+            document.documentElement.dataset.theme = savedTheme || preferredTheme;
+        } catch {
+            document.documentElement.dataset.theme = 'dark';
+        }
+    </script>
+    <style>
+        /* --- 1. Variables & Reset --- */
+        :root {
+            color-scheme: dark;
+            --bg-color: #000000;
+            --text-primary: #ffffff;
+            --text-dim: #8b98a9;
+            --accent: #10b981; /* Tenure Green */
+            --accent-strong: #34d399;
+            --accent-contrast: #031712;
+            --glass: rgba(255, 255, 255, 0.1);
+            --glass-panel: rgba(15, 23, 42, 0.95);
+            --border: rgba(255, 255, 255, 0.1);
+            --shadow: rgba(0, 0, 0, 0.45);
+            --danger: #ef4444;
+            --button-bg: #262626;
+            --button-muted: #334155;
+            --canvas-bg: rgba(30, 41, 59, 0.4);
+            --canvas-opaque-bg: #0f172a;
+            --modal-bg: #111111;
+            --modal-overlay: rgba(0,0,0,0.85);
+            --trigger-bottom: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+            --trigger-top: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
+        }
+
+        html[data-theme="light"] {
+            color-scheme: light;
+            --bg-color: #f3f5f7;
+            --text-primary: #111827;
+            --text-dim: #4b5563;
+            --accent: #0f766e;
+            --accent-strong: #0f766e;
+            --accent-contrast: #ffffff;
+            --glass: rgba(17, 24, 39, 0.08);
+            --glass-panel: rgba(248, 250, 252, 0.97);
+            --border: rgba(15, 23, 42, 0.16);
+            --shadow: rgba(15, 23, 42, 0.16);
+            --danger: #b91c1c;
+            --button-bg: #e5e7eb;
+            --button-muted: #d1d5db;
+            --canvas-bg: rgba(226, 232, 240, 0.75);
+            --canvas-opaque-bg: #ffffff;
+            --modal-bg: #ffffff;
+            --modal-overlay: rgba(15, 23, 42, 0.38);
+            --trigger-bottom: linear-gradient(to top, rgba(243,245,247,0.88), transparent);
+            --trigger-top: linear-gradient(to bottom, rgba(243,245,247,0.88), transparent);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+        
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            transition: opacity 1s ease;
+        }
+
+        /* --- 2. Animations --- */
+        @keyframes pixel-shift {
+            0% { transform: translate(0, 0); }
+            50% { transform: translate(2px, 2px); }
+            100% { transform: translate(0, 0); }
+        }
+        
+        @keyframes pulse-green {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        .burn-in-wrapper {
+            width: 100%; height: 100%; display: flex; flex-direction: column;
+            animation: pixel-shift 60s infinite steps(1);
+        }
+
+        /* --- 3. Dimmed State (Night Mode) --- */
+        body.dimmed-state .main-display { opacity: 0.1; filter: grayscale(100%); }
+        body.dimmed-state .trigger-bar, body.dimmed-state .trigger-bar-top { opacity: 0; }
+        
+        #wake-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 999; display: none;
+        }
+
+        /* --- 4. Main Clock --- */
+        .main-display {
+            flex: 1; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; text-align: center;
+            transition: all 1s ease;
+        }
+
+        .time-container { font-family: 'JetBrains Mono', monospace; cursor: pointer; }
+        #clock-time { font-size: 18vw; line-height: 1; font-weight: 700; letter-spacing: -5px; }
+        #clock-seconds { font-size: 4vw; color: var(--text-dim); vertical-align: top; margin-left: 10px; }
+
+        .date-container {
+            margin-top: 20px; font-size: 3vw; color: var(--text-dim); cursor: pointer;
+            border: 1px solid transparent; padding: 10px 20px; border-radius: 50px;
+        }
+        .date-container:active { background: var(--glass); }
+
+        body.focus-mode .date-container, 
+        body.focus-mode .trigger-bar, 
+        body.focus-mode .trigger-bar-top { opacity: 0; pointer-events: none; }
+
+        /* --- 5. Slide Panels --- */
+        .panel-base {
+            position: absolute; left: 0; width: 100%; height: 95%;
+            background: var(--glass-panel);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            z-index: 50; display: flex; flex-direction: column; padding: 1.5rem;
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .slide-panel-bottom {
+            bottom: 0; border-top: 1px solid var(--accent); border-radius: 24px 24px 0 0;
+            transform: translateY(100%);
+        }
+        .slide-panel-bottom.active-panel { transform: translateY(0); }
+
+        .slide-panel-top {
+            top: 0; border-bottom: 1px solid var(--accent); border-radius: 0 0 24px 24px;
+            transform: translateY(-100%);
+        }
+        .slide-panel-top.active-panel { transform: translateY(0); }
+
+        .slide-close-btn { align-self: center; background: transparent; border: none; color: var(--text-dim); font-size: 1.5rem; padding: 0 20px 10px 20px; cursor: pointer; }
+
+        /* --- 6. Trigger Bars --- */
+        .trigger-bar, .trigger-bar-top {
+            position: absolute; width: 100%; height: 60px; display: flex; justify-content: center; align-items: center; cursor: pointer; z-index: 20;
+            transition: opacity 0.3s;
+        }
+        .trigger-bar { bottom: 0; background: var(--trigger-bottom); }
+        .trigger-bar-top { top: 0; background: var(--trigger-top); }
+        
+        .chevron-up, .chevron-down { width: 40px; height: 5px; background: var(--text-dim); border-radius: 10px; }
+        
+        body.panel-is-open .trigger-bar, body.panel-is-open .trigger-bar-top { opacity: 0; pointer-events: none; }
+
+        /* --- 7. Tenure Styles --- */
+        .tenure-header { text-align: center; margin-bottom: 2rem; }
+        .status-badge { display: inline-flex; align-items: center; background: color-mix(in srgb, var(--accent) 18%, transparent); border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent); color: var(--accent-strong); padding: 0.4rem 0.8rem; border-radius: 99px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 1rem; }
+        .status-dot { width: 8px; height: 8px; background-color: var(--accent-strong); border-radius: 50%; margin-right: 8px; box-shadow: 0 0 5px var(--accent-strong); animation: pulse-green 2s infinite; }
+        .tenure-name { font-size: 2.5rem; font-weight: 700; margin-bottom: 0.2rem; background: linear-gradient(to right, #60a5fa, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -1px; }
+        .tenure-title { font-size: 0.8rem; color: var(--text-dim); letter-spacing: 2px; text-transform: uppercase; }
+        .tenure-grid { display: flex; flex-direction: column; gap: 15px; flex: 1; justify-content: center; }
+        .tenure-row { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
+        .stat-card { background: var(--glass); padding: 1.2rem; border-radius: 12px; min-width: 110px; text-align: center; border: 1px solid var(--border); box-shadow: 0 10px 24px var(--shadow); }
+        .stat-num { font-family: 'JetBrains Mono', monospace; font-size: 2.2rem; font-weight: 700; display: block; color: var(--text-primary); line-height: 1.1; }
+        .stat-num.secondary { color: var(--text-primary); }
+        .stat-label { font-size: 0.65rem; text-transform: uppercase; color: var(--text-dim); letter-spacing: 2px; margin-top: 5px; display: block; }
+        .uptime-terminal { background: var(--glass); border: 1px solid var(--border); border-radius: 12px; padding: 1rem; margin-top: auto; text-align: center; box-shadow: 0 10px 24px var(--shadow); }
+        .term-labels { display: flex; justify-content: space-between; font-size: 0.6rem; color: var(--text-dim); text-transform: uppercase; margin-bottom: 0.5rem; }
+        .term-display { font-family: 'JetBrains Mono', monospace; font-size: 1.2rem; color: var(--accent); text-shadow: 0 0 10px rgba(16, 185, 129, 0.3); }
+
+        /* --- 8. Tools Styles --- */
+        .tools-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 10px; flex-shrink: 0; width: 100%; align-items: center; }
+        .theme-control { display: inline-flex; flex: 0 0 auto; gap: 4px; height: 50px; padding: 4px; border: 1px solid var(--border); border-radius: 10px; background: var(--glass); }
+        .theme-option { min-width: 58px; border: 0; border-radius: 7px; background: transparent; color: var(--text-dim); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; }
+        .theme-option[aria-pressed="true"] { background: var(--accent); color: var(--accent-contrast); }
+        
+        .tool-btn { 
+            background: var(--glass); border: 1px solid var(--border); color: var(--text-primary); 
+            padding: 15px 10px; border-radius: 8px; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; 
+            cursor: pointer; transition: background 0.1s; flex: 1; text-align: center; 
+            display: flex; align-items: center; justify-content: center; height: 50px;
+        }
+        .tool-btn:active { background: var(--accent); color: var(--accent-contrast); }
+        .tool-btn.active-tab { background: var(--accent); color: var(--accent-contrast); font-weight: bold; }
+        
+        .mute-btn { 
+            background: none; border: 1px solid var(--border); color: var(--text-dim); 
+            border-radius: 8px; width: 50px; height: 50px; 
+            cursor: pointer; display: flex; justify-content: center; align-items: center; 
+            font-size: 1.2rem; flex: 0 0 50px; /* Fixed width */
+        }
+        .mute-btn:active { background: var(--glass); } .mute-btn.muted { color: #ef4444; border-color: #ef4444; }
+
+        .tool-view { width: 100%; display: none; }
+        .centered-tool { max-width: 400px; margin: 0 auto; width: 100%; height: 100%; flex-direction: column; }
+        
+        /* --- NOTES STYLES --- */
+        .notes-tool { 
+            width: 100%; height: 100%; 
+            display: flex; flex-direction: column;
+            max-width: 100%; 
+        }
+        
+        #note-canvas-container {
+            flex: 1; 
+            background: var(--canvas-bg);
+            border-radius: 12px; border: 2px solid var(--border);
+            position: relative; overflow: hidden; cursor: crosshair;
+            touch-action: none;
+            transition: background-color 0.3s;
+        }
+        
+        #note-canvas-container.opaque-bg { background: var(--canvas-opaque-bg); border-color: var(--accent); }
+        
+        #note-canvas { display: block; width: 100%; height: 100%; }
+
+        .notes-controls {
+            display: flex; gap: 15px; margin-top: 15px; justify-content: center; align-items: center;
+            flex-shrink: 0;
+        }
+        .palette-btn {
+            width: 35px; height: 35px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.2); cursor: pointer; transition: transform 0.2s;
+        }
+        .palette-btn.pen-selected { transform: scale(1.2); border-color: #fff; box-shadow: 0 0 10px rgba(255,255,255,0.2); }
+        .p-green { background: #10b981; }
+        .p-white { background: #ffffff; }
+        .p-red { background: #ef4444; }
+        
+        .eraser-btn {
+            background: var(--button-muted); color: var(--text-dim); border: 1px solid var(--border);
+            padding: 8px 15px; border-radius: 20px; font-size: 0.8rem; cursor: pointer; font-weight: bold;
+        }
+        .eraser-btn.pen-selected { background: var(--accent); color: var(--accent-contrast); }
+
+        .icon-btn { background: var(--glass); color: var(--text-primary); border: 1px solid var(--border); width: 40px; height: 35px; border-radius: 20px; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .clear-btn { background: #b91c1c; color: white; border: none; padding: 8px 15px; border-radius: 20px; font-size: 0.8rem; cursor: pointer; font-weight: bold; margin-left: auto; }
+
+        /* Calculator */
+        .calc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; flex: 1; }
+        .calc-btn { padding: 0; font-size: 1.5rem; background: var(--button-bg); border: none; color: var(--text-primary); border-radius: 8px; }
+        .calc-btn.op { background: var(--accent); color: var(--accent-contrast); }
+        .calc-display { grid-column: span 4; background: var(--bg-color); color: var(--accent); padding: 20px; text-align: right; font-family: 'JetBrains Mono'; font-size: 2rem; margin-bottom: 10px; border-radius: 8px; }
+
+        /* Timer/Stopwatch */
+        .time-tool-display { font-size: 3.5rem; font-family: 'JetBrains Mono'; margin: 1rem 0; text-align: center; color: var(--text-primary); }
+        .control-row { display: flex; justify-content: center; gap: 15px; margin-top: 20px; }
+        .timer-inputs { display: flex; justify-content: center; gap: 10px; align-items: center; margin-bottom: 20px; }
+        .timer-input-group { display: flex; flex-direction: column; align-items: center; }
+        .timer-input-group label { font-size: 0.7rem; color: var(--text-dim); margin-bottom: 5px; }
+        .timer-input-box { background: var(--bg-color); border: 1px solid var(--border); color: var(--accent); font-family: 'JetBrains Mono'; font-size: 1.5rem; width: 70px; padding: 10px; text-align: center; border-radius: 8px; }
+
+        /* Modal Overlays */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--modal-overlay); z-index: 100; display: none; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+        .modal-content-simple { background: var(--modal-bg); padding: 2rem; border-radius: 16px; width: 90%; max-width: 450px; border: 1px solid var(--border); }
+        .alert-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(185, 28, 28, 0.85); z-index: 200; display: none; justify-content: center; align-items: center; flex-direction: column; backdrop-filter: blur(8px); }
+        .alert-text { font-size: 2.5rem; font-weight: 700; color: white; margin-bottom: 2rem; text-transform: uppercase; letter-spacing: 2px; text-align: center; }
+        .alert-btn { background: white; color: #b91c1c; border: none; padding: 15px 40px; font-size: 1.2rem; font-weight: bold; border-radius: 50px; cursor: pointer; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; }
+        .cal-header { color: var(--text-dim); font-size: 0.8rem; margin-bottom: 10px; padding: 5px; }
+        .cal-day { padding: 10px; background: var(--button-bg); border-radius: 4px; font-size: 1rem; border: 1px solid transparent; }
+        .cal-weekend { background: var(--glass); border: 1px solid var(--border); color: var(--text-dim); }
+        .cal-today { background: var(--accent); color: var(--accent-contrast); font-weight: bold; }
+
+        @media (max-width: 720px) {
+            .tools-tabs { flex-wrap: wrap; }
+            .theme-control { width: 100%; }
+            .theme-option { flex: 1; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="burn-in-wrapper">
+        <div class="trigger-bar-top" onclick="toggleTools(); playSound('click');">
+            <div class="chevron-down"></div>
+        </div>
+
+        <main class="main-display">
+            <div class="time-container" onclick="toggleFocusMode(); playSound('click');">
+                <span id="clock-time">00:00</span>
+                <span id="clock-seconds">00</span>
+            </div>
+            <div class="date-container" onclick="renderCalendar(); openModal('calendar-modal'); playSound('click');">
+                <span id="date-display">Loading...</span>
+            </div>
+        </main>
+
+        <div class="trigger-bar" onclick="toggleTenure(); playSound('click');">
+            <div class="chevron-up"></div>
+        </div>
+    </div>
+
+    <div id="wake-overlay" onclick="wakeScreen()"></div>
+
+    <div id="timer-alert-overlay" class="alert-overlay">
+        <div class="alert-text">Timer Finished</div>
+        <button class="alert-btn" onclick="dismissTimerAlert(); playSound('click');">Dismiss</button>
+    </div>
+
+    <div class="panel-base slide-panel-top" id="tools-panel">
+        
+        <div class="tools-tabs">
+            <button class="tool-btn" id="tab-calc" onclick="switchTool('calc'); playSound('click');">Calc</button>
+            <button class="tool-btn" id="tab-stopwatch" onclick="switchTool('stopwatch'); playSound('click');">Stopwatch</button>
+            <button class="tool-btn" id="tab-timer" onclick="switchTool('timer'); playSound('click');">Timer</button>
+            <button class="tool-btn" id="tab-notes" onclick="switchTool('notes'); playSound('click');">Notes</button>
+            <div class="theme-control" aria-label="Theme">
+                <button class="theme-option" id="theme-dark" type="button" aria-pressed="true" onclick="setTheme('dark'); playSound('click');">Dark</button>
+                <button class="theme-option" id="theme-light" type="button" aria-pressed="false" onclick="setTheme('light'); playSound('click');">Light</button>
+            </div>
+            <button class="mute-btn" id="mute-toggle-btn" onclick="toggleMute(); playSound('click');">🔊</button>
+        </div>
+
+        <div id="tool-calc" class="tool-view centered-tool">
+            <div class="calc-display" id="calc-display">0</div>
+            <div class="calc-grid">
+                <button class="calc-btn" onclick="cIn('7')">7</button><button class="calc-btn" onclick="cIn('8')">8</button><button class="calc-btn" onclick="cIn('9')">9</button><button class="calc-btn op" onclick="cIn('/')">/</button>
+                <button class="calc-btn" onclick="cIn('4')">4</button><button class="calc-btn" onclick="cIn('5')">5</button><button class="calc-btn" onclick="cIn('6')">6</button><button class="calc-btn op" onclick="cIn('*')">*</button>
+                <button class="calc-btn" onclick="cIn('1')">1</button><button class="calc-btn" onclick="cIn('2')">2</button><button class="calc-btn" onclick="cIn('3')">3</button><button class="calc-btn op" onclick="cIn('-')">-</button>
+                <button class="calc-btn" onclick="cIn('0')">0</button><button class="calc-btn" onclick="cIn('.')">.</button><button class="calc-btn" onclick="cEval()">=</button><button class="calc-btn op" onclick="cIn('+')">+</button>
+                <button class="calc-btn" style="background:#b91c1c; grid-column: span 4;" onclick="cClear()">CLEAR</button>
+            </div>
+        </div>
+
+        <div id="tool-stopwatch" class="tool-view centered-tool" style="justify-content:center; text-align:center;">
+            <div class="time-tool-display" id="sw-display">00:00:00</div>
+            <div class="control-row">
+                <button class="tool-btn" onclick="swStart(); playSound('click');">Start</button>
+                <button class="tool-btn" onclick="swStop(); playSound('click');">Stop</button>
+                <button class="tool-btn" onclick="swReset(); playSound('click');">Reset</button>
+            </div>
+        </div>
+
+        <div id="tool-timer" class="tool-view centered-tool" style="justify-content:center; text-align:center;">
+            <div id="timer-setup">
+                <div class="timer-inputs">
+                    <div class="timer-input-group"><label>HRS</label><input type="number" id="tmr-h" class="timer-input-box" value="0" min="0"></div>
+                    <div class="timer-input-group"><label>MIN</label><input type="number" id="tmr-m" class="timer-input-box" value="5" min="0"></div>
+                    <div class="timer-input-group"><label>SEC</label><input type="number" id="tmr-s" class="timer-input-box" value="0" min="0"></div>
+                </div>
+                <button class="tool-btn" style="width:100%; margin-top:10px;" onclick="tmrStart(); playSound('click');">Start Countdown</button>
+            </div>
+            <div id="timer-running" style="display:none;">
+                <div class="time-tool-display" id="tmr-display" style="color:var(--accent);">00:00:00</div>
+                <div class="control-row">
+                    <button class="tool-btn" id="tmr-pp-btn" onclick="tmrTogglePause(); playSound('click');">Pause</button>
+                    <button class="tool-btn" onclick="tmrClear(); playSound('click');">Clear</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="tool-notes" class="tool-view notes-tool">
+            <div id="note-canvas-container">
+                <canvas id="note-canvas"></canvas>
+            </div>
+            <div class="notes-controls">
+                <div class="palette-btn p-green pen-selected" onclick="setPenColor('#10b981', this)"></div>
+                <div class="palette-btn p-white" onclick="setPenColor('#ffffff', this)"></div>
+                <div class="palette-btn p-red" onclick="setPenColor('#ef4444', this)"></div>
+                <button class="eraser-btn" onclick="setEraser(this)">Eraser</button>
+                
+                <button class="icon-btn" onclick="toggleNoteBg()" title="Toggle Contrast">👁️</button>
+                <button class="icon-btn" onclick="saveCanvasImage()" title="Save Image">💾</button>
+                
+                <button class="clear-btn" onclick="clearCanvas(); playSound('click');">Clear</button>
+            </div>
+        </div>
+
+        <button class="slide-close-btn" style="margin-top:auto;" onclick="toggleTools(); playSound('click');">&#x25B2;</button>
+    </div>
+
+    <div class="panel-base slide-panel-bottom" id="tenure-panel">
+        <button class="slide-close-btn" onclick="toggleTenure(); playSound('click');">&#x25BC;</button>
+        <div class="tenure-header">
+            <div class="status-badge"><div class="status-dot"></div>System Active</div>
+            <div class="tenure-name">Andy Clifton</div>
+            <div class="tenure-title">Head of IT &bull; Service Tenure</div>
+        </div>
+        <div class="tenure-grid">
+            <div class="tenure-row">
+                <div class="stat-card"><span class="stat-num" id="t-years">0</span><span class="stat-label">Years</span></div>
+                <div class="stat-card"><span class="stat-num" id="t-weeks">0</span><span class="stat-label">Weeks</span></div>
+                <div class="stat-card"><span class="stat-num" id="t-days">0</span><span class="stat-label">Days</span></div>
+            </div>
+            <div class="tenure-row">
+                <div class="stat-card"><span class="stat-num secondary" id="t-hours">0</span><span class="stat-label">Hours</span></div>
+                <div class="stat-card"><span class="stat-num secondary" id="t-minutes">0</span><span class="stat-label">Mins</span></div>
+                <div class="stat-card"><span class="stat-num secondary" id="t-seconds">0</span><span class="stat-label">Secs</span></div>
+            </div>
+        </div>
+        <div class="uptime-terminal">
+            <div class="term-labels"><span>Total Uptime Log</span><span>ID: CLAREMONT-05</span></div>
+            <div class="term-display" id="total-uptime-log">LOADING...</div>
+        </div>
+    </div>
+
+    <div id="calendar-modal" class="modal-overlay">
+        <div class="modal-content-simple">
+            <div class="panel-header">
+                <span id="cal-month-name">Month</span>
+                <span onclick="closeModal('calendar-modal'); playSound('click');" style="cursor:pointer">X</span>
+            </div>
+            <div class="calendar-grid">
+                <div class="cal-header">MON</div><div class="cal-header">TUE</div><div class="cal-header">WED</div><div class="cal-header">THU</div><div class="cal-header">FRI</div><div class="cal-header" style="color:#ef4444">SAT</div><div class="cal-header" style="color:#ef4444">SUN</div>
+            </div>
+            <div class="calendar-grid" id="calendar-grid"></div>
+        </div>
+    </div>
+
+    <script>
+        (function generateFavicon() { const c=document.createElement('canvas');c.width=32;c.height=32;const ctx=c.getContext('2d');ctx.fillStyle='#0f172a';ctx.fillRect(0,0,32,32);ctx.fillStyle='#10b981';ctx.beginPath();ctx.arc(16,16,8,0,Math.PI*2);ctx.fill();const l=document.createElement('link');l.type='image/x-icon';l.rel='shortcut icon';l.href=c.toDataURL();document.head.appendChild(l);})();
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').catch(() => {});
+            });
+        }
+
+        const THEME_KEY = 'ac_dashboard_theme';
+        function setTheme(theme) {
+            const nextTheme = theme === 'light' ? 'light' : 'dark';
+            document.documentElement.dataset.theme = nextTheme;
+            const meta = document.getElementById('theme-color-meta');
+            if (meta) meta.content = nextTheme === 'light' ? '#f3f5f7' : '#000000';
+            document.querySelectorAll('.theme-option').forEach((button) => {
+                button.setAttribute('aria-pressed', String(button.id === `theme-${nextTheme}`));
+            });
+            try { localStorage.setItem(THEME_KEY, nextTheme); } catch { /* storage may be unavailable */ }
+        }
+        setTheme(document.documentElement.dataset.theme);
+
+        let wakeLock = null;
+        async function requestWakeLock() {
+            if (!('wakeLock' in navigator) || document.hidden || wakeLock) return;
+            try {
+                wakeLock = await navigator.wakeLock.request('screen');
+                wakeLock.addEventListener('release', () => { wakeLock = null; });
+            } catch {
+                wakeLock = null;
+            }
+        }
+        document.addEventListener('pointerdown', requestWakeLock, { once: true });
+        document.addEventListener('visibilitychange', () => { if (!document.hidden) requestWakeLock(); });
+        window.addEventListener('load', requestWakeLock);
+        
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        let isMuted = false;
+        function toggleMute() { isMuted = !isMuted; const b=document.getElementById('mute-toggle-btn'); b.textContent=isMuted?"🔇":"🔊"; b.classList.toggle('muted', isMuted); }
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            if (isMuted && type !== 'alarm') return;
+            const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.connect(gain); gain.connect(audioCtx.destination);
+            if (type === 'click') { osc.type='triangle'; osc.frequency.setValueAtTime(150, audioCtx.currentTime); gain.gain.setValueAtTime(0.15, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+0.04); osc.start(); osc.stop(audioCtx.currentTime+0.04); }
+            else if (type === 'alarm') { osc.type='sine'; osc.frequency.setValueAtTime(600, audioCtx.currentTime); gain.gain.setValueAtTime(0.2, audioCtx.currentTime); gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime+0.5); osc.start(); osc.stop(audioCtx.currentTime+0.5); }
+        }
+
+        /* Auto-Dim */
+        let wakeTimeout;
+        function checkAutoDim(now) {
+            const min = (now.getHours()*60) + now.getMinutes();
+            const start = (7*60)+30, end = (17*60)+50; 
+            const isNight = (min < start || min > end);
+            const body = document.body;
+            if (!body.classList.contains('woken-state')) {
+                if (isNight) {
+                    if (!body.classList.contains('dimmed-state')) { body.classList.add('dimmed-state'); document.getElementById('wake-overlay').style.display='block'; if(window.fully) fully.setScreenBrightness(0); }
+                } else {
+                    if (body.classList.contains('dimmed-state')) { body.classList.remove('dimmed-state'); document.getElementById('wake-overlay').style.display='none'; if(window.fully) fully.setScreenBrightness(75); }
+                }
+            }
+        }
+        function wakeScreen() {
+            document.body.classList.add('woken-state'); document.body.classList.remove('dimmed-state'); document.getElementById('wake-overlay').style.display = 'none';
+            if (window.fully) fully.setScreenBrightness(75);
+            clearTimeout(wakeTimeout); wakeTimeout = setTimeout(() => { document.body.classList.remove('woken-state'); }, 30000);
+        }
+
+        /* Clock */
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('clock-time').textContent = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+            document.getElementById('clock-seconds').textContent = now.getSeconds().toString().padStart(2, '0');
+            document.getElementById('date-display').textContent = now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+            updateTenure(now); checkAutoDim(now);
+        }
+        setInterval(updateClock, 1000); updateClock();
+
+        function updateTenure(now) {
+            if(!document.getElementById('tenure-panel').classList.contains('active-panel')) return;
+            const s = new Date('2005-04-24T08:00:00');
+            let y = now.getFullYear() - s.getFullYear();
+            const m = now.getMonth() - s.getMonth();
+            if (m < 0 || (m === 0 && now.getDate() < s.getDate())) y--;
+            const c = new Date(s); c.setFullYear(s.getFullYear() + y);
+            let diff = now - c;
+            const ms = [604800000, 86400000, 3600000, 60000, 1000];
+            const w = Math.floor(diff / ms[0]); diff -= w * ms[0];
+            const d = Math.floor(diff / ms[1]); diff -= d * ms[1];
+            const h = Math.floor(diff / ms[2]); diff -= h * ms[2];
+            const min = Math.floor(diff / ms[3]); diff -= min * ms[3];
+            const sec = Math.floor(diff / ms[4]);
+            document.getElementById('t-years').textContent = y; document.getElementById('t-weeks').textContent = w; document.getElementById('t-days').textContent = d;
+            document.getElementById('t-hours').textContent = h; document.getElementById('t-minutes').textContent = min; document.getElementById('t-seconds').textContent = sec;
+            let tD = now - s; let ts = Math.floor(tD/1000); let tm = Math.floor(ts/60); let th = Math.floor(tm/60);
+            document.getElementById('total-uptime-log').innerHTML = `${th.toLocaleString()}<span style="color:#64748b">:</span>${(tm%60).toString().padStart(2,'0')}<span style="color:#64748b">:</span>${(ts%60).toString().padStart(2,'0')}`;
+        }
+
+        /* FIXED Panel Logic */
+        function toggleTenure() { 
+            const t=document.getElementById('tenure-panel'); 
+            const o=document.getElementById('tools-panel'); 
+            if(o.classList.contains('active-panel')) o.classList.remove('active-panel'); 
+            t.classList.toggle('active-panel'); 
+            updateBodyPanelState(); 
+        }
+        function toggleTools() { 
+            const t=document.getElementById('tools-panel'); 
+            const o=document.getElementById('tenure-panel'); 
+            if(o.classList.contains('active-panel')) o.classList.remove('active-panel'); 
+            t.classList.toggle('active-panel'); 
+            updateBodyPanelState(); 
+        }
+        function updateBodyPanelState() { 
+            const panelActive = document.querySelector('.panel-base.active-panel'); 
+            document.body.classList.toggle('panel-is-open', !!panelActive); 
+        }
+
+        function toggleFocusMode() { document.body.classList.toggle('focus-mode'); }
+        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+        function switchTool(tool) {
+            document.querySelectorAll('.tool-view').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.tools-tabs .tool-btn').forEach(el => el.classList.remove('active-tab'));
+            document.getElementById('tool-' + tool).style.display = 'flex';
+            document.getElementById('tab-' + tool).classList.add('active-tab');
+            if (tool === 'timer' && timerState !== 'idle') { document.getElementById('timer-setup').style.display = 'none'; document.getElementById('timer-running').style.display = 'block'; updateTimerUI(); }
+            
+            const noteContainer = document.getElementById('note-canvas-container');
+            if(tool === 'notes') { setTimeout(resizeCanvas, 50); noteContainer.classList.remove('opaque-bg'); } 
+            else { noteContainer.classList.remove('opaque-bg'); }
+        }
+
+        /* Calc */
+        let cVal = "";
+        function cIn(v) { cVal += v; document.getElementById('calc-display').textContent = cVal; playSound('click'); }
+        function cClear() { cVal = ""; document.getElementById('calc-display').textContent = "0"; playSound('click'); }
+        function parseCalcExpression(input) {
+            const src = input.replace(/\s+/g, '');
+            let pos = 0;
+
+            function parseNumber() {
+                const start = pos;
+                while (pos < src.length && /[0-9.]/.test(src[pos])) pos++;
+                const token = src.slice(start, pos);
+                if (!/^\d+(\.\d+)?$|^\.\d+$/.test(token)) throw new Error('Invalid number');
+                return Number(token);
+            }
+
+            function parseFactor() {
+                if (src[pos] === '+') { pos++; return parseFactor(); }
+                if (src[pos] === '-') { pos++; return -parseFactor(); }
+                return parseNumber();
+            }
+
+            function parseTerm() {
+                let value = parseFactor();
+                while (src[pos] === '*' || src[pos] === '/') {
+                    const op = src[pos++];
+                    const next = parseFactor();
+                    value = op === '*' ? value * next : value / next;
+                }
+                return value;
+            }
+
+            function parseExpression() {
+                let value = parseTerm();
+                while (src[pos] === '+' || src[pos] === '-') {
+                    const op = src[pos++];
+                    const next = parseTerm();
+                    value = op === '+' ? value + next : value - next;
+                }
+                return value;
+            }
+
+            const result = parseExpression();
+            if (pos !== src.length || !Number.isFinite(result)) throw new Error('Invalid expression');
+            return result;
+        }
+
+        function cEval() {
+            try {
+                cVal = parseCalcExpression(cVal).toString();
+                document.getElementById('calc-display').textContent = cVal;
+            } catch {
+                document.getElementById('calc-display').textContent = "Error";
+                cVal="";
+            }
+            playSound('click');
+        }
+
+        let swInt, swSec = 0;
+        function swStart() { if(!swInt) swInt = setInterval(() => { swSec++; document.getElementById('sw-display').textContent = new Date(swSec * 1000).toISOString().substr(11, 8); }, 1000); }
+        function swStop() { clearInterval(swInt); swInt = null; }
+        function swReset() { swStop(); swSec = 0; document.getElementById('sw-display').textContent = "00:00:00"; }
+
+        let timerState = 'idle', timerEndTime = null, timerRaf;
+        function tmrStart() {
+            const h = parseInt(document.getElementById('tmr-h').value) || 0, m = parseInt(document.getElementById('tmr-m').value) || 0, s = parseInt(document.getElementById('tmr-s').value) || 0;
+            if (h===0 && m===0 && s===0) return;
+            timerEndTime = Date.now() + ((h * 3600) + (m * 60) + s) * 1000; timerState = 'running';
+            document.getElementById('timer-setup').style.display = 'none'; document.getElementById('timer-running').style.display = 'block';
+            document.getElementById('tmr-pp-btn').textContent = "Pause"; document.getElementById('tmr-display').style.color = "var(--accent)"; updateTimerLoop();
+        }
+        function updateTimerLoop() {
+            if (timerState !== 'running') return;
+            const diff = timerEndTime - Date.now();
+            if (diff <= 0) {
+                timerState = 'finished'; document.getElementById('tmr-display').textContent = "00:00:00"; document.getElementById('tmr-display').style.color = "#ef4444"; playSound('alarm');
+                const panelActive = document.getElementById('tools-panel').classList.contains('active-panel'), timerTabActive = document.getElementById('tool-timer').style.display === 'flex';
+                if (!panelActive || !timerTabActive) document.getElementById('timer-alert-overlay').style.display = 'flex';
+            } else {
+                const h = Math.floor((diff / 3600000) % 24), m = Math.floor((diff / 60000) % 60), s = Math.floor((diff / 1000) % 60);
+                if(document.getElementById('tool-timer').style.display === 'flex') document.getElementById('tmr-display').textContent = `${h<10?'0'+h:h}:${m<10?'0'+m:m}:${s<10?'0'+s:s}`;
+                timerRaf = requestAnimationFrame(updateTimerLoop);
+            }
+        }
+        function tmrTogglePause() { if (timerState === 'running') { cancelAnimationFrame(timerRaf); timerEndTime -= Date.now(); timerState = 'paused'; document.getElementById('tmr-pp-btn').textContent = "Resume"; } else if (timerState === 'paused') { timerEndTime += Date.now(); timerState = 'running'; document.getElementById('tmr-pp-btn').textContent = "Pause"; updateTimerLoop(); } }
+        function tmrClear() { cancelAnimationFrame(timerRaf); timerState = 'idle'; document.getElementById('tmr-display').textContent = "00:00:00"; document.getElementById('timer-running').style.display = 'none'; document.getElementById('timer-setup').style.display = 'block'; }
+        function updateTimerUI() { document.getElementById('tmr-pp-btn').textContent = timerState === 'paused' ? "Resume" : "Pause"; }
+        function dismissTimerAlert() { document.getElementById('timer-alert-overlay').style.display = 'none'; tmrClear(); }
+
+        /* NOTES */
+        const canvas = document.getElementById('note-canvas');
+        const ctx = canvas.getContext('2d');
+        let painting = false;
+        let penColor = '#10b981';
+
+        function resizeCanvas() {
+            const container = document.getElementById('note-canvas-container');
+            const data = canvas.toDataURL(); 
+            canvas.width = container.offsetWidth;
+            canvas.height = container.offsetHeight;
+            const img = new Image();
+            img.onload = function() { ctx.drawImage(img, 0, 0); };
+            img.src = data; 
+        }
+        window.addEventListener('resize', resizeCanvas);
+
+        function startPosition(e) { painting = true; draw(e); }
+        function finishedPosition() { painting = false; ctx.beginPath(); saveNote(); }
+        function draw(e) {
+            if (!painting) return;
+            e.preventDefault(); 
+            const rect = canvas.getBoundingClientRect();
+            let x, y;
+            if (e.touches) { x = e.touches[0].clientX - rect.left; y = e.touches[0].clientY - rect.top; } 
+            else { x = e.clientX - rect.left; y = e.clientY - rect.top; }
+            ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.strokeStyle = penColor;
+            ctx.lineTo(x, y); ctx.stroke(); ctx.beginPath(); ctx.moveTo(x, y);
+        }
+
+        canvas.addEventListener('mousedown', startPosition); canvas.addEventListener('mouseup', finishedPosition); canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('touchstart', startPosition); canvas.addEventListener('touchend', finishedPosition); canvas.addEventListener('touchmove', draw);
+
+        function setPenColor(color, btn) { penColor = color; ctx.globalCompositeOperation = "source-over"; updateActiveBtn(btn); }
+        function setEraser(btn) { ctx.globalCompositeOperation = "destination-out"; ctx.lineWidth = 20; updateActiveBtn(btn); }
+        function clearCanvas() { ctx.clearRect(0, 0, canvas.width, canvas.height); saveNote(); }
+        function updateActiveBtn(btn) { document.querySelectorAll('.palette-btn, .eraser-btn').forEach(el => el.classList.remove('pen-selected')); btn.classList.add('pen-selected'); }
+        function saveNote() { localStorage.setItem('ac_dashboard_note', canvas.toDataURL()); }
+        function loadNote() { const data = localStorage.getItem('ac_dashboard_note'); if (data) { const img = new Image(); img.onload = function() { ctx.drawImage(img, 0, 0); }; img.src = data; } }
+        setTimeout(loadNote, 500);
+
+        function saveCanvasImage() { playSound('click'); const link = document.createElement('a'); link.download = 'dashboard-note.png'; link.href = canvas.toDataURL(); link.click(); }
+        function toggleNoteBg() { playSound('click'); document.getElementById('note-canvas-container').classList.toggle('opaque-bg'); }
+
+        /* Calendar */
+        function renderCalendar() {
+            const g = document.getElementById('calendar-grid'); g.innerHTML = ""; const now = new Date();
+            document.getElementById('cal-month-name').textContent = now.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+            let start = new Date(now.getFullYear(), now.getMonth(), 1).getDay(); start = start === 0 ? 6 : start - 1;
+            for(let i=0; i<start; i++) g.innerHTML += `<div></div>`;
+            for(let i=1; i<=new Date(now.getFullYear(), now.getMonth()+1, 0).getDate(); i++) {
+                let d = (start + i) % 7; if (d === 0) d = 7;
+                let cls = "cal-day" + ((d===6||d===7)?" cal-weekend":"") + (i===now.getDate()?" cal-today":"");
+                g.innerHTML += `<div class="${cls}">${i}</div>`;
+            }
+        }
+        switchTool('calc');
+    </script>
+</body>
+</html>
