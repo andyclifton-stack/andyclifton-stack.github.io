@@ -42,6 +42,8 @@
             --modal-overlay: rgba(0,0,0,0.85);
             --trigger-bottom: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
             --trigger-top: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
+            --clock-glow: rgba(16, 185, 129, 0.22);
+            --clock-panel: transparent;
         }
 
         html[data-theme="light"] {
@@ -65,6 +67,47 @@
             --modal-overlay: rgba(15, 23, 42, 0.38);
             --trigger-bottom: linear-gradient(to top, rgba(243,245,247,0.88), transparent);
             --trigger-top: linear-gradient(to bottom, rgba(243,245,247,0.88), transparent);
+            --clock-glow: rgba(15, 118, 110, 0.16);
+            --clock-panel: transparent;
+        }
+
+        html[data-visual-theme="midnight"] {
+            --bg-color: #020617;
+            --glass-panel: rgba(15, 23, 42, 0.96);
+            --accent: #38bdf8;
+            --accent-strong: #7dd3fc;
+            --accent-contrast: #031525;
+            --clock-glow: rgba(56, 189, 248, 0.22);
+        }
+
+        html[data-visual-theme="matrix"] {
+            --bg-color: #000000;
+            --accent: #22c55e;
+            --accent-strong: #86efac;
+            --accent-contrast: #041308;
+            --clock-glow: rgba(34, 197, 94, 0.25);
+        }
+
+        html[data-visual-theme="solar"] {
+            --bg-color: #fff7ed;
+            --text-primary: #1c1917;
+            --text-dim: #57534e;
+            --glass-panel: rgba(255, 251, 235, 0.97);
+            --accent: #b45309;
+            --accent-strong: #92400e;
+            --accent-contrast: #fffaf0;
+            --button-bg: #fed7aa;
+            --button-muted: #fdba74;
+            --clock-glow: rgba(180, 83, 9, 0.16);
+        }
+
+        html[data-visual-theme="performance"] {
+            --bg-color: #09090b;
+            --glass-panel: rgba(24, 24, 27, 0.96);
+            --accent: #ef4444;
+            --accent-strong: #f87171;
+            --accent-contrast: #1f0505;
+            --clock-glow: rgba(239, 68, 68, 0.24);
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
@@ -99,6 +142,15 @@
             animation: pixel-shift 60s infinite steps(1);
         }
 
+        .dashboard-theme-control {
+            position: fixed;
+            z-index: 35;
+            top: max(12px, env(safe-area-inset-top));
+            right: max(12px, env(safe-area-inset-right));
+            box-shadow: 0 10px 24px var(--shadow);
+            width: auto;
+        }
+
         /* --- 3. Dimmed State (Night Mode) --- */
         body.dimmed-state .main-display { opacity: 0.1; filter: grayscale(100%); }
         body.dimmed-state .trigger-bar, body.dimmed-state .trigger-bar-top { opacity: 0; }
@@ -115,9 +167,16 @@
             transition: all 1s ease;
         }
 
-        .time-container { font-family: 'JetBrains Mono', monospace; cursor: pointer; }
-        #clock-time { font-size: 18vw; line-height: 1; font-weight: 700; letter-spacing: -5px; }
+        .time-container { font-family: 'JetBrains Mono', monospace; cursor: pointer; padding: 0.08em 0.18em; border-radius: 0.18em; background: var(--clock-panel); }
+        #clock-time { font-size: 18vw; line-height: 1; font-weight: 700; letter-spacing: -5px; text-shadow: 0 0 32px var(--clock-glow); }
         #clock-seconds { font-size: 4vw; color: var(--text-dim); vertical-align: top; margin-left: 10px; }
+        html[data-clock-style="calm"] .time-container { font-family: 'Inter', sans-serif; }
+        html[data-clock-style="calm"] #clock-time { font-weight: 300; letter-spacing: -0.08em; }
+        html[data-clock-style="calm"] #clock-seconds { font-weight: 600; }
+        html[data-clock-style="block"] .time-container { background: var(--glass); border: 1px solid var(--border); box-shadow: 0 20px 48px var(--shadow); }
+        html[data-clock-style="block"] #clock-time { letter-spacing: -0.02em; }
+        html[data-clock-style="minimal"] #clock-seconds { display: none; }
+        html[data-clock-style="minimal"] #clock-time { font-size: 19vw; font-weight: 600; letter-spacing: -0.06em; }
 
         .date-container {
             margin-top: 20px; font-size: 3vw; color: var(--text-dim); cursor: pointer;
@@ -185,6 +244,25 @@
         .theme-control { display: inline-flex; flex: 0 0 auto; gap: 4px; height: 50px; padding: 4px; border: 1px solid var(--border); border-radius: 10px; background: var(--glass); }
         .theme-option { min-width: 58px; border: 0; border-radius: 7px; background: transparent; color: var(--text-dim); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; }
         .theme-option[aria-pressed="true"] { background: var(--accent); color: var(--accent-contrast); }
+        .style-lab { width: 100%; height: 100%; overflow: auto; padding-right: 4px; }
+        .lab-section { margin-bottom: 22px; }
+        .lab-heading { display: flex; justify-content: space-between; gap: 12px; align-items: end; margin-bottom: 12px; }
+        .lab-heading h2 { font-size: 1rem; letter-spacing: 0.04em; text-transform: uppercase; }
+        .lab-heading p { color: var(--text-dim); font-size: 0.78rem; line-height: 1.4; max-width: 34rem; }
+        .choice-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+        .style-choice { min-height: 108px; padding: 12px; border: 1px solid var(--border); border-radius: 14px; background: var(--glass); color: var(--text-primary); cursor: pointer; text-align: left; }
+        .style-choice[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 30%, transparent); }
+        .choice-preview { height: 42px; border-radius: 10px; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.16); }
+        .preview-midnight { background: linear-gradient(135deg, #020617, #0f172a 50%, #38bdf8); }
+        .preview-matrix { background: linear-gradient(135deg, #000, #052e16 55%, #22c55e); }
+        .preview-solar { background: linear-gradient(135deg, #fff7ed, #fed7aa 55%, #b45309); }
+        .preview-performance { background: linear-gradient(135deg, #09090b, #27272a 55%, #ef4444); }
+        .style-choice strong { display: block; font-size: 0.92rem; margin-bottom: 3px; }
+        .style-choice span { color: var(--text-dim); font-size: 0.72rem; line-height: 1.35; }
+        .clock-preview { display: block; margin-bottom: 8px; color: var(--accent); font-family: 'JetBrains Mono', monospace; font-size: 1.35rem; }
+        .clock-preview.calm { font-family: 'Inter', sans-serif; font-weight: 300; }
+        .clock-preview.block { padding: 7px 9px; border-radius: 8px; background: var(--bg-color); border: 1px solid var(--border); }
+        .clock-preview.minimal .seconds { display: none; }
         
         .tool-btn { 
             background: var(--glass); border: 1px solid var(--border); color: var(--text-primary); 
@@ -275,8 +353,9 @@
 
         @media (max-width: 720px) {
             .tools-tabs { flex-wrap: wrap; }
-            .theme-control { width: 100%; }
+            .tools-tabs .theme-control { width: 100%; }
             .theme-option { flex: 1; }
+            .dashboard-theme-control { left: max(12px, env(safe-area-inset-left)); right: auto; max-width: 164px; }
         }
 
     </style>
@@ -284,6 +363,11 @@
 <body>
 
     <div class="burn-in-wrapper">
+        <div class="theme-control dashboard-theme-control" aria-label="Dashboard theme">
+            <button class="theme-option" id="theme-dark" type="button" aria-pressed="true" onclick="setTheme('dark'); playSound('click');">Dark</button>
+            <button class="theme-option" id="theme-light" type="button" aria-pressed="false" onclick="setTheme('light'); playSound('click');">Light</button>
+        </div>
+
         <div class="trigger-bar-top" onclick="toggleTools(); playSound('click');">
             <div class="chevron-down"></div>
         </div>
@@ -317,10 +401,7 @@
             <button class="tool-btn" id="tab-stopwatch" onclick="switchTool('stopwatch'); playSound('click');">Stopwatch</button>
             <button class="tool-btn" id="tab-timer" onclick="switchTool('timer'); playSound('click');">Timer</button>
             <button class="tool-btn" id="tab-notes" onclick="switchTool('notes'); playSound('click');">Notes</button>
-            <div class="theme-control" aria-label="Theme">
-                <button class="theme-option" id="theme-dark" type="button" aria-pressed="true" onclick="setTheme('dark'); playSound('click');">Dark</button>
-                <button class="theme-option" id="theme-light" type="button" aria-pressed="false" onclick="setTheme('light'); playSound('click');">Light</button>
-            </div>
+            <button class="tool-btn" id="tab-stylelab" onclick="switchTool('stylelab'); playSound('click');">Style Lab</button>
             <button class="mute-btn" id="mute-toggle-btn" onclick="toggleMute(); playSound('click');">🔊</button>
         </div>
 
@@ -379,6 +460,70 @@
             </div>
         </div>
 
+        <div id="tool-stylelab" class="tool-view style-lab">
+            <section class="lab-section">
+                <div class="lab-heading">
+                    <div>
+                        <h2>Visual themes</h2>
+                        <p>Try alternate high-contrast dashboard palettes. These are saved on this device.</p>
+                    </div>
+                </div>
+                <div class="choice-grid" id="visual-theme-options">
+                    <button class="style-choice" type="button" data-visual-theme="matrix" aria-pressed="false">
+                        <span class="choice-preview preview-matrix" aria-hidden="true"></span>
+                        <strong>Matrix Green</strong>
+                        <span>Deep black with bright status green.</span>
+                    </button>
+                    <button class="style-choice" type="button" data-visual-theme="midnight" aria-pressed="false">
+                        <span class="choice-preview preview-midnight" aria-hidden="true"></span>
+                        <strong>Midnight Blue</strong>
+                        <span>Cool blue glow for night driving.</span>
+                    </button>
+                    <button class="style-choice" type="button" data-visual-theme="performance" aria-pressed="false">
+                        <span class="choice-preview preview-performance" aria-hidden="true"></span>
+                        <strong>Performance Red</strong>
+                        <span>Dark cabin style with red accents.</span>
+                    </button>
+                    <button class="style-choice" type="button" data-visual-theme="solar" aria-pressed="false">
+                        <span class="choice-preview preview-solar" aria-hidden="true"></span>
+                        <strong>Solar Light</strong>
+                        <span>Warm bright palette for daylight.</span>
+                    </button>
+                </div>
+            </section>
+
+            <section class="lab-section">
+                <div class="lab-heading">
+                    <div>
+                        <h2>Clock faces</h2>
+                        <p>Switch the main clock treatment without changing timer or stopwatch tools.</p>
+                    </div>
+                </div>
+                <div class="choice-grid" id="clock-style-options">
+                    <button class="style-choice" type="button" data-clock-style="mono" aria-pressed="false">
+                        <span class="clock-preview">14:28<span class="seconds"> 09</span></span>
+                        <strong>Mono Classic</strong>
+                        <span>The current high-legibility clock.</span>
+                    </button>
+                    <button class="style-choice" type="button" data-clock-style="calm" aria-pressed="false">
+                        <span class="clock-preview calm">14:28<span class="seconds"> 09</span></span>
+                        <strong>Calm Thin</strong>
+                        <span>Lighter Tesla-style typography.</span>
+                    </button>
+                    <button class="style-choice" type="button" data-clock-style="block" aria-pressed="false">
+                        <span class="clock-preview block">14:28<span class="seconds"> 09</span></span>
+                        <strong>Glass Block</strong>
+                        <span>Framed display for stronger contrast.</span>
+                    </button>
+                    <button class="style-choice" type="button" data-clock-style="minimal" aria-pressed="false">
+                        <span class="clock-preview minimal">14:28<span class="seconds"> 09</span></span>
+                        <strong>Minimal</strong>
+                        <span>Hides seconds for a quieter screen.</span>
+                    </button>
+                </div>
+            </section>
+        </div>
+
         <button class="slide-close-btn" style="margin-top:auto;" onclick="toggleTools(); playSound('click');">&#x25B2;</button>
     </div>
 
@@ -430,6 +575,8 @@
         }
 
         const THEME_KEY = 'ac_dashboard_theme';
+        const VISUAL_THEME_KEY = 'ac_dashboard_visual_theme';
+        const CLOCK_STYLE_KEY = 'ac_dashboard_clock_style';
         function setTheme(theme) {
             const nextTheme = theme === 'light' ? 'light' : 'dark';
             document.documentElement.dataset.theme = nextTheme;
@@ -441,6 +588,44 @@
             try { localStorage.setItem(THEME_KEY, nextTheme); } catch { /* storage may be unavailable */ }
         }
         setTheme(document.documentElement.dataset.theme);
+
+        function setVisualTheme(theme) {
+            const allowed = ['matrix', 'midnight', 'performance', 'solar'];
+            const nextTheme = allowed.includes(theme) ? theme : 'matrix';
+            document.documentElement.dataset.visualTheme = nextTheme;
+            document.querySelectorAll('[data-visual-theme]').forEach((button) => {
+                button.setAttribute('aria-pressed', String(button.dataset.visualTheme === nextTheme));
+            });
+            try { localStorage.setItem(VISUAL_THEME_KEY, nextTheme); } catch { /* storage may be unavailable */ }
+        }
+
+        function setClockStyle(style) {
+            const allowed = ['mono', 'calm', 'block', 'minimal'];
+            const nextStyle = allowed.includes(style) ? style : 'mono';
+            document.documentElement.dataset.clockStyle = nextStyle;
+            document.querySelectorAll('[data-clock-style]').forEach((button) => {
+                button.setAttribute('aria-pressed', String(button.dataset.clockStyle === nextStyle));
+            });
+            try { localStorage.setItem(CLOCK_STYLE_KEY, nextStyle); } catch { /* storage may be unavailable */ }
+        }
+
+        function bindStyleLab() {
+            document.querySelectorAll('[data-visual-theme]').forEach((button) => {
+                button.addEventListener('click', () => { setVisualTheme(button.dataset.visualTheme); playSound('click'); });
+            });
+            document.querySelectorAll('[data-clock-style]').forEach((button) => {
+                button.addEventListener('click', () => { setClockStyle(button.dataset.clockStyle); playSound('click'); });
+            });
+        }
+
+        try {
+            setVisualTheme(localStorage.getItem(VISUAL_THEME_KEY) || 'matrix');
+            setClockStyle(localStorage.getItem(CLOCK_STYLE_KEY) || 'mono');
+        } catch {
+            setVisualTheme('matrix');
+            setClockStyle('mono');
+        }
+        bindStyleLab();
 
         let wakeLock = null;
         async function requestWakeLock() {
