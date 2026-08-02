@@ -43,6 +43,8 @@
             --modal-overlay: rgba(0,0,0,0.85);
             --trigger-bottom: linear-gradient(to top, rgba(15, 23, 42, 0.86), rgba(15, 23, 42, 0.28), transparent);
             --trigger-top: linear-gradient(to bottom, rgba(15, 23, 42, 0.86), rgba(15, 23, 42, 0.28), transparent);
+            --clock-color: var(--text-primary);
+            --clock-seconds-color: var(--text-dim);
             --clock-glow: rgba(16, 185, 129, 0.22);
             --clock-panel: transparent;
         }
@@ -57,7 +59,7 @@
             --accent-contrast: #ffffff;
             --glass: rgba(17, 24, 39, 0.08);
             --glass-panel: rgba(248, 250, 252, 0.97);
-            --overlay-panel-bg: rgba(248, 250, 252, 0.97);
+            --overlay-panel-bg: rgba(15, 23, 42, 0.95);
             --border: rgba(15, 23, 42, 0.16);
             --shadow: rgba(15, 23, 42, 0.16);
             --danger: #b91c1c;
@@ -67,100 +69,36 @@
             --canvas-opaque-bg: #ffffff;
             --modal-bg: #ffffff;
             --modal-overlay: rgba(15, 23, 42, 0.38);
-            --trigger-bottom: linear-gradient(to top, rgba(243,245,247,0.88), transparent);
-            --trigger-top: linear-gradient(to bottom, rgba(243,245,247,0.88), transparent);
+            --trigger-bottom: linear-gradient(to top, rgba(15, 23, 42, 0.86), rgba(15, 23, 42, 0.28), transparent);
+            --trigger-top: linear-gradient(to bottom, rgba(15, 23, 42, 0.86), rgba(15, 23, 42, 0.28), transparent);
+            --clock-color: var(--text-primary);
+            --clock-seconds-color: var(--text-dim);
             --clock-glow: rgba(15, 118, 110, 0.16);
             --clock-panel: transparent;
         }
 
-        html[data-theme="dark"][data-visual-theme="midnight"] {
-            --bg-color: #000000;
-            --glass-panel: rgba(0, 0, 0, 0.96);
-            --overlay-panel-bg: rgba(15, 23, 42, 0.95);
-            --accent: #38bdf8;
-            --accent-strong: #7dd3fc;
-            --accent-contrast: #031525;
+        html[data-visual-theme="midnight"] {
+            --clock-color: #7dd3fc;
+            --clock-seconds-color: #bae6fd;
             --clock-glow: rgba(56, 189, 248, 0.22);
         }
 
-        html[data-theme="light"][data-visual-theme="midnight"] {
-            --bg-color: #eff6ff;
-            --text-primary: #0f172a;
-            --text-dim: #475569;
-            --glass-panel: rgba(248, 250, 252, 0.97);
-            --accent: #0369a1;
-            --accent-strong: #075985;
-            --accent-contrast: #ffffff;
-            --button-bg: #dbeafe;
-            --button-muted: #bfdbfe;
-            --clock-glow: rgba(3, 105, 161, 0.18);
-        }
-
-        html[data-theme="dark"][data-visual-theme="matrix"] {
-            --bg-color: #000000;
-            --accent: #22c55e;
-            --accent-strong: #86efac;
-            --accent-contrast: #041308;
+        html[data-visual-theme="matrix"] {
+            --clock-color: #86efac;
+            --clock-seconds-color: #bbf7d0;
             --clock-glow: rgba(34, 197, 94, 0.25);
         }
 
-        html[data-theme="light"][data-visual-theme="matrix"] {
-            --bg-color: #f0fdf4;
-            --text-primary: #052e16;
-            --text-dim: #166534;
-            --glass-panel: rgba(240, 253, 244, 0.97);
-            --accent: #15803d;
-            --accent-strong: #166534;
-            --accent-contrast: #ffffff;
-            --button-bg: #dcfce7;
-            --button-muted: #bbf7d0;
-            --clock-glow: rgba(21, 128, 61, 0.16);
-        }
-
-        html[data-theme="light"][data-visual-theme="solar"] {
-            --bg-color: #fff7ed;
-            --text-primary: #1c1917;
-            --text-dim: #57534e;
-            --glass-panel: rgba(255, 251, 235, 0.97);
-            --accent: #b45309;
-            --accent-strong: #92400e;
-            --accent-contrast: #fffaf0;
-            --button-bg: #fed7aa;
-            --button-muted: #fdba74;
+        html[data-visual-theme="solar"] {
+            --clock-color: #f59e0b;
+            --clock-seconds-color: #fbbf24;
             --clock-glow: rgba(180, 83, 9, 0.16);
         }
 
-        html[data-theme="dark"][data-visual-theme="solar"] {
-            --bg-color: #000000;
-            --glass-panel: rgba(0, 0, 0, 0.96);
-            --overlay-panel-bg: rgba(15, 23, 42, 0.95);
-            --accent: #f59e0b;
-            --accent-strong: #fbbf24;
-            --accent-contrast: #1c1204;
-            --clock-glow: rgba(245, 158, 11, 0.22);
-        }
-
-        html[data-theme="dark"][data-visual-theme="performance"] {
-            --bg-color: #000000;
-            --glass-panel: rgba(0, 0, 0, 0.96);
-            --overlay-panel-bg: rgba(15, 23, 42, 0.95);
-            --accent: #ef4444;
-            --accent-strong: #f87171;
-            --accent-contrast: #1f0505;
+        html[data-visual-theme="performance"] {
+            --clock-color: #f87171;
+            --clock-seconds-color: #fecaca;
             --clock-glow: rgba(239, 68, 68, 0.24);
-        }
-
-        html[data-theme="light"][data-visual-theme="performance"] {
-            --bg-color: #fff1f2;
-            --text-primary: #1f1113;
-            --text-dim: #7f1d1d;
-            --glass-panel: rgba(255, 241, 242, 0.97);
-            --accent: #be123c;
-            --accent-strong: #9f1239;
-            --accent-contrast: #ffffff;
-            --button-bg: #ffe4e6;
-            --button-muted: #fecdd3;
-            --clock-glow: rgba(190, 18, 60, 0.16);
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
@@ -221,8 +159,8 @@
         }
 
         .time-container { font-family: 'JetBrains Mono', monospace; cursor: pointer; padding: 0.08em 0.18em; border-radius: 0.18em; background: var(--clock-panel); }
-        #clock-time { font-size: 18vw; line-height: 1; font-weight: 700; letter-spacing: -5px; text-shadow: 0 0 32px var(--clock-glow); }
-        #clock-seconds { font-size: 4vw; color: var(--text-dim); vertical-align: top; margin-left: 10px; }
+        #clock-time { color: var(--clock-color); font-size: 18vw; line-height: 1; font-weight: 700; letter-spacing: -5px; text-shadow: 0 0 32px var(--clock-glow); }
+        #clock-seconds { font-size: 4vw; color: var(--clock-seconds-color); vertical-align: top; margin-left: 10px; }
         html[data-clock-style="calm"] .time-container { font-family: 'Inter', sans-serif; }
         html[data-clock-style="calm"] #clock-time { font-weight: 300; letter-spacing: -0.08em; }
         html[data-clock-style="calm"] #clock-seconds { font-weight: 600; }
@@ -245,6 +183,13 @@
         .panel-base {
             position: absolute; left: 0; width: 100%; height: 95%;
             background: var(--overlay-panel-bg);
+            --text-primary: #ffffff;
+            --text-dim: #94a3b8;
+            --border: rgba(255, 255, 255, 0.1);
+            --glass: rgba(255, 255, 255, 0.1);
+            --button-bg: #050505;
+            --button-muted: #111111;
+            color: #ffffff;
             backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
             z-index: 50; display: flex; flex-direction: column; padding: 1.5rem;
             transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
@@ -298,9 +243,10 @@
         .theme-option { min-width: 58px; border: 0; border-radius: 7px; background: transparent; color: var(--text-dim); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; }
         .theme-option[aria-pressed="true"] { background: var(--accent); color: var(--accent-contrast); }
         .style-lab { width: 100%; height: 100%; overflow: auto; padding-right: 4px; }
-        .lab-section { margin-bottom: 22px; }
-        .lab-heading { display: flex; justify-content: space-between; gap: 12px; align-items: end; margin-bottom: 12px; }
-        .lab-heading h2 { font-size: 1rem; letter-spacing: 0.04em; text-transform: uppercase; }
+        .lab-section { margin-bottom: 24px; padding: 16px; border: 1px solid var(--border); border-radius: 16px; background: rgba(255, 255, 255, 0.045); }
+        .lab-section + .lab-section { margin-top: 16px; }
+        .lab-heading { display: flex; justify-content: space-between; gap: 12px; align-items: end; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+        .lab-heading h2 { font-size: 0.82rem; color: #bfdbfe; letter-spacing: 0.12em; text-transform: uppercase; }
         .lab-heading p { color: var(--text-dim); font-size: 0.78rem; line-height: 1.4; max-width: 34rem; }
         .choice-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
         .style-choice { min-height: 108px; padding: 12px; border: 1px solid var(--border); border-radius: 14px; background: var(--glass); color: var(--text-primary); cursor: pointer; text-align: left; }
