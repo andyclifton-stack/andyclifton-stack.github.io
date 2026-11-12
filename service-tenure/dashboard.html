@@ -114,13 +114,6 @@
             transition: opacity 1s ease;
         }
 
-        .page-track {
-            width: 100%; height: 100%; display: flex;
-            transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
-            will-change: transform;
-        }
-        .page-track.show-guide { transform: translateX(-100vw); }
-        .dashboard-page, .model-guide-page { width: 100vw; height: 100%; flex: 0 0 100vw; position: relative; }
 
         /* --- 2. Animations --- */
         @keyframes pixel-shift {
@@ -149,64 +142,6 @@
             width: auto;
         }
 
-        /* --- Model Guide Page --- */
-        .model-guide-page {
-            overflow-y: auto; padding: clamp(1.2rem, 3vw, 2.4rem);
-            padding-bottom: 5.2rem; background: #050807; color: #ffffff; touch-action: pan-y;
-            --text-primary: #ffffff; --text-dim: #94a3b8; --border: rgba(255, 255, 255, 0.1);
-        }
-        .guide-inner { width: min(1100px, 100%); min-height: 100%; margin: 0 auto; display: flex; flex-direction: column; }
-        .guide-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 2rem; margin-bottom: 1.4rem; }
-        .guide-eyebrow { color: var(--accent); font: 700 0.7rem 'JetBrains Mono', monospace; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 0.45rem; }
-        .guide-title { font-size: clamp(1.8rem, 4vw, 3rem); line-height: 1; letter-spacing: 0; }
-        .guide-subtitle { color: #94a3b8; font-size: clamp(0.8rem, 1.5vw, 1rem); max-width: 28rem; text-align: right; line-height: 1.5; }
-        .guide-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.9rem; flex: 1; }
-        .model-card {
-            display: grid; grid-template-columns: minmax(145px, 0.8fr) 1.2fr; gap: 1rem;
-            min-height: 0; padding: clamp(1rem, 2vw, 1.4rem); border: 1px solid var(--model-border);
-            border-radius: 8px; background: var(--model-bg);
-        }
-        .model-card.astra { --model: #f472b6; --model-bg: rgba(131, 24, 67, 0.17); --model-border: rgba(244, 114, 182, 0.32); }
-        .model-card.sol { --model: #60a5fa; --model-bg: rgba(30, 64, 175, 0.17); --model-border: rgba(96, 165, 250, 0.32); }
-        .model-card.terra { --model: #4ade80; --model-bg: rgba(21, 128, 61, 0.16); --model-border: rgba(74, 222, 128, 0.3); }
-        .model-card.luna { --model: #fbbf24; --model-bg: rgba(161, 98, 7, 0.16); --model-border: rgba(251, 191, 36, 0.3); }
-        .model-identity { border-right: 1px solid var(--model-border); padding-right: 1rem; }
-        .model-mark { width: 2.2rem; height: 0.3rem; border-radius: 4px; background: var(--model); margin-bottom: 0.9rem; box-shadow: 0 0 16px color-mix(in srgb, var(--model) 55%, transparent); }
-        .model-name { font-size: clamp(1.15rem, 2.1vw, 1.6rem); line-height: 1.1; margin-bottom: 0.45rem; }
-        .model-role { color: #cbd5e1; font-size: 0.82rem; line-height: 1.4; }
-        .model-detail { display: flex; flex-direction: column; justify-content: center; gap: 0.6rem; }
-        .model-best { color: var(--model); font-size: 0.72rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
-        .model-tasks { color: #e2e8f0; font-size: clamp(0.78rem, 1.4vw, 0.95rem); line-height: 1.55; }
-        .guide-footer { display: flex; justify-content: space-between; gap: 1rem; margin-top: 1rem; color: #64748b; font-size: 0.75rem; }
-        .guide-footer strong { color: #cbd5e1; }
-        .page-edge-btn {
-            position: absolute; top: 50%; z-index: 25; transform: translateY(-50%);
-            width: 42px; min-height: 112px; border: 1px solid var(--border); color: #94a3b8;
-            background: rgba(15, 23, 42, 0.72); font: 700 0.62rem 'JetBrains Mono', monospace;
-            letter-spacing: 1px; text-transform: uppercase; cursor: pointer; writing-mode: vertical-rl;
-        }
-        .page-edge-btn:active { background: var(--accent); color: #000; }
-        .page-edge-btn.next { right: 0; border-right: 0; border-radius: 8px 0 0 8px; }
-        .page-edge-btn.previous { left: 0; border-left: 0; border-radius: 0 8px 8px 0; transform: translateY(-50%) rotate(180deg); }
-        .page-dots { position: fixed; left: 50%; bottom: 68px; z-index: 30; transform: translateX(-50%); display: flex; gap: 8px; }
-        .page-dot { width: 8px; height: 8px; padding: 0; border: 0; border-radius: 50%; background: #334155; cursor: pointer; }
-        .page-dot.active { background: var(--accent); box-shadow: 0 0 8px rgba(16, 185, 129, 0.6); }
-
-        @media (max-width: 700px) {
-            .model-guide-page { padding: 1.1rem 1.1rem 5.2rem; }
-            .guide-header { display: block; padding-right: 3rem; }
-            .guide-subtitle { text-align: left; margin-top: 0.55rem; }
-            .guide-grid { grid-template-columns: 1fr; }
-            .model-card { grid-template-columns: minmax(120px, 0.7fr) 1.3fr; }
-            .guide-footer { flex-direction: column; }
-            .model-guide-page .page-edge-btn.previous {
-                top: 12px; right: 1.1rem; bottom: auto; left: auto; width: 40px; min-height: 40px; padding: 0;
-                writing-mode: horizontal-tb; transform: none; border: 1px solid var(--border); border-radius: 8px;
-                font-size: 0;
-            }
-            .model-guide-page .page-edge-btn.previous::after { content: '\2039'; font: 700 1.6rem 'Inter', sans-serif; }
-            .page-dots { display: none; }
-        }
 
         /* --- 3. Dimmed State (Night Mode) --- */
         body.dimmed-state .main-display { opacity: 0.1; filter: grayscale(100%); }
@@ -443,8 +378,6 @@
 </head>
 <body>
 
-    <div class="page-track" id="page-track">
-    <section class="dashboard-page" aria-label="Clock dashboard">
     <div class="burn-in-wrapper">
         <div class="theme-control dashboard-theme-control" aria-label="Dashboard theme">
             <button class="theme-option" id="theme-dark" type="button" aria-pressed="true" onclick="setTheme('dark'); playSound('click');">Dark</button>
@@ -468,49 +401,7 @@
             <span class="tenure-trigger-label">Service Tenure</span>
         </button>
         </main>
-        <button class="page-edge-btn next" type="button" onclick="setDashboardPage(1)" aria-label="Open model guide">Guide</button>
     </div>
-    </section>
-
-    <section class="model-guide-page" aria-label="Codex model selection guide">
-        <button class="page-edge-btn previous" type="button" onclick="setDashboardPage(0)" aria-label="Return to clock">Clock</button>
-        <div class="guide-inner">
-            <header class="guide-header">
-                <div>
-                    <div class="guide-eyebrow">Quick Reference</div>
-                    <h1 class="guide-title">Codex Model Guide</h1>
-                </div>
-                <p class="guide-subtitle">Start with Sol. Move up for complexity, or down for speed and routine work.</p>
-            </header>
-
-            <div class="guide-grid">
-                <article class="model-card astra">
-                    <div class="model-identity"><div class="model-mark"></div><h2 class="model-name">GPT-6 Astra</h2><p class="model-role">Deepest reasoning for complex work</p></div>
-                    <div class="model-detail"><div class="model-best">Choose for</div><p class="model-tasks">Large builds, architecture, migrations, difficult debugging and high-stakes decisions.</p></div>
-                </article>
-                <article class="model-card sol">
-                    <div class="model-identity"><div class="model-mark"></div><h2 class="model-name">GPT-5.6 Sol</h2><p class="model-role">The dependable everyday default</p></div>
-                    <div class="model-detail"><div class="model-best">Choose for</div><p class="model-tasks">Coding, automation, API work, configuration and practical troubleshooting.</p></div>
-                </article>
-                <article class="model-card terra">
-                    <div class="model-identity"><div class="model-mark"></div><h2 class="model-name">GPT-5.6 Terra</h2><p class="model-role">Fast, efficient routine work</p></div>
-                    <div class="model-detail"><div class="model-best">Choose for</div><p class="model-tasks">Small scripts, file handling, straightforward edits and repetitive structured tasks.</p></div>
-                </article>
-                <article class="model-card luna">
-                    <div class="model-identity"><div class="model-mark"></div><h2 class="model-name">GPT-5.6 Luna</h2><p class="model-role">Quick answers and tiny changes</p></div>
-                    <div class="model-detail"><div class="model-best">Choose for</div><p class="model-tasks">Lookups, rewording, minor code edits, formatting and simple explanations.</p></div>
-                </article>
-            </div>
-
-            <footer class="guide-footer"><span><strong>Rule of thumb:</strong> pick the simplest model that can do the job well.</span><span>Swipe right to return to the clock.</span></footer>
-        </div>
-    </section>
-    </div>
-
-    <nav class="page-dots" aria-label="Dashboard pages">
-        <button class="page-dot active" type="button" onclick="setDashboardPage(0)" aria-label="Clock page" aria-current="page"></button>
-        <button class="page-dot" type="button" onclick="setDashboardPage(1)" aria-label="Model guide page"></button>
-    </nav>
 
     <div id="wake-overlay" onclick="wakeScreen()"></div>
 
@@ -766,52 +657,6 @@
         document.addEventListener('visibilitychange', () => { if (!document.hidden) requestWakeLock(); });
         window.addEventListener('load', requestWakeLock);
 
-        /* Horizontal dashboard pages */
-        let dashboardPage = 0;
-        function setDashboardPage(page) {
-            dashboardPage = page === 1 ? 1 : 0;
-            document.getElementById('page-track').classList.toggle('show-guide', dashboardPage === 1);
-            document.querySelectorAll('.page-dot').forEach((dot, index) => {
-                const active = index === dashboardPage;
-                dot.classList.toggle('active', active);
-                if (active) dot.setAttribute('aria-current', 'page');
-                else dot.removeAttribute('aria-current');
-            });
-        }
-
-        let swipeStartX = 0;
-        let swipeStartY = 0;
-        let swipeTracking = false;
-        let suppressSwipeClick = false;
-        document.addEventListener('touchstart', event => {
-            if (document.body.classList.contains('panel-is-open') || event.target.closest('button, input, canvas, .modal-overlay')) return;
-            const touch = event.changedTouches[0];
-            swipeStartX = touch.clientX;
-            swipeStartY = touch.clientY;
-            swipeTracking = true;
-        }, { passive: true });
-        document.addEventListener('touchend', event => {
-            if (!swipeTracking) return;
-            const touch = event.changedTouches[0];
-            const dx = touch.clientX - swipeStartX;
-            const dy = touch.clientY - swipeStartY;
-            swipeStartX = 0;
-            swipeStartY = 0;
-            swipeTracking = false;
-            if (Math.abs(dx) < 70 || Math.abs(dx) <= Math.abs(dy) * 1.25) return;
-            suppressSwipeClick = true;
-            setDashboardPage(dx < 0 ? 1 : 0);
-            setTimeout(() => { suppressSwipeClick = false; }, 350);
-        }, { passive: true });
-        document.addEventListener('click', event => {
-            if (!suppressSwipeClick) return;
-            event.preventDefault();
-            event.stopPropagation();
-        }, true);
-        document.addEventListener('keydown', event => {
-            if (event.key === 'ArrowRight') setDashboardPage(1);
-            if (event.key === 'ArrowLeft') setDashboardPage(0);
-        });
         
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         let isMuted = false;

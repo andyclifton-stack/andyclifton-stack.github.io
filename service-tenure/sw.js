@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ac-dashboard-v28';
+const CACHE_NAME = 'ac-dashboard-v29';
 const CORE_ASSETS = [
   './',
   './index.html',
