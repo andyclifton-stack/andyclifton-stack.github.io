@@ -1,12 +1,12 @@
 {
   "name": "AC Dashboard",
   "short_name": "Dashboard",
-  "description": "A simple tablet dashboard for clock, tenure, calculator, timer, stopwatch, and notes.",
+  "description": "A desk and car clock with service tenure, timer, and scratchpad.",
   "start_url": "./",
   "scope": "./",
   "display": "fullscreen",
-  "background_color": "#000000",
-  "theme_color": "#000000",
+  "background_color": "#101211",
+  "theme_color": "#101211",
   "icons": [
     {
       "src": "icon-192.png",
