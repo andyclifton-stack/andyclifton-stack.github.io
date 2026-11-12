@@ -108,6 +108,7 @@
             color: var(--text-primary);
             font-family: 'Inter', sans-serif;
             height: 100vh;
+            height: 100dvh;
             overflow: hidden;
             position: relative;
             transition: opacity 1s ease;
@@ -279,26 +280,24 @@
             position: absolute; width: 100%; height: 60px; display: flex; justify-content: center; align-items: center; cursor: pointer; z-index: 20;
             transition: opacity 0.3s;
         }
-        .trigger-bar { bottom: 0; background: var(--trigger-bottom); }
-        .trigger-bar-top { top: 0; background: var(--trigger-top); }
-        .tenure-trigger-label { display: none; }
-
-        @media (max-width: 600px), (max-height: 500px) and (max-width: 960px) and (pointer: coarse) {
-            .trigger-bar {
-                bottom: calc(40px + env(safe-area-inset-bottom, 0px));
-                left: 50%; transform: translateX(-50%);
-                width: 180px; height: 52px; gap: 10px;
-                border: 1px solid var(--border); border-radius: 8px;
-                background: var(--bg-color); color: var(--text-primary);
-                touch-action: manipulation;
-            }
-            .trigger-bar .chevron-up {
-                width: 9px; height: 9px; border-top: 2px solid currentColor;
-                border-left: 2px solid currentColor; border-radius: 0;
-                background: none; transform: translateY(3px) rotate(45deg);
-            }
-            .tenure-trigger-label { display: inline; font-size: 14px; font-weight: 600; }
+        .trigger-bar {
+            position: relative; flex: 0 0 52px;
+            width: 180px; max-width: 100%; height: 52px; gap: 12px;
+            margin-top: 28px; padding: 0 16px;
+            border: 1px solid var(--border); border-radius: 8px;
+            background: var(--glass); color: var(--text-primary);
+            font: inherit; touch-action: manipulation;
         }
+        .trigger-bar:hover { border-color: var(--accent); }
+        .trigger-bar:active { background: var(--accent); color: var(--accent-contrast); }
+        .trigger-bar:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+        .trigger-bar .chevron-up {
+            width: 9px; height: 9px; border-top: 2px solid currentColor;
+            border-left: 2px solid currentColor; border-radius: 0;
+            background: none; transform: translateY(3px) rotate(45deg);
+        }
+        .trigger-bar-top { top: 0; background: var(--trigger-top); }
+        .tenure-trigger-label { font-size: 14px; font-weight: 600; }
         
         .chevron-up, .chevron-down { width: 40px; height: 5px; background: var(--text-dim); border-radius: 10px; }
         
@@ -464,12 +463,11 @@
             <div class="date-container" onclick="renderCalendar(); openModal('calendar-modal'); playSound('click');">
                 <span id="date-display">Loading...</span>
             </div>
-        </main>
-
-        <div class="trigger-bar" role="button" tabindex="0" aria-label="Open Service Tenure" onkeydown="if(event.key === 'Enter' || event.key === ' ') { event.preventDefault(); this.click(); }" onclick="toggleTenure(); playSound('click');">
+        <button class="trigger-bar" type="button" aria-label="Open Service Tenure" onclick="toggleTenure(); playSound('click');">
             <div class="chevron-up" aria-hidden="true"></div>
             <span class="tenure-trigger-label">Service Tenure</span>
-        </div>
+        </button>
+        </main>
         <button class="page-edge-btn next" type="button" onclick="setDashboardPage(1)" aria-label="Open model guide">Guide</button>
     </div>
     </section>
