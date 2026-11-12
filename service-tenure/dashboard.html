@@ -281,6 +281,24 @@
         }
         .trigger-bar { bottom: 0; background: var(--trigger-bottom); }
         .trigger-bar-top { top: 0; background: var(--trigger-top); }
+        .tenure-trigger-label { display: none; }
+
+        @media (max-width: 600px), (max-height: 500px) and (max-width: 960px) and (pointer: coarse) {
+            .trigger-bar {
+                bottom: calc(40px + env(safe-area-inset-bottom, 0px));
+                left: 50%; transform: translateX(-50%);
+                width: 180px; height: 52px; gap: 10px;
+                border: 1px solid var(--border); border-radius: 8px;
+                background: var(--bg-color); color: var(--text-primary);
+                touch-action: manipulation;
+            }
+            .trigger-bar .chevron-up {
+                width: 9px; height: 9px; border-top: 2px solid currentColor;
+                border-left: 2px solid currentColor; border-radius: 0;
+                background: none; transform: translateY(3px) rotate(45deg);
+            }
+            .tenure-trigger-label { display: inline; font-size: 14px; font-weight: 600; }
+        }
         
         .chevron-up, .chevron-down { width: 40px; height: 5px; background: var(--text-dim); border-radius: 10px; }
         
@@ -448,8 +466,9 @@
             </div>
         </main>
 
-        <div class="trigger-bar" onclick="toggleTenure(); playSound('click');">
-            <div class="chevron-up"></div>
+        <div class="trigger-bar" role="button" tabindex="0" aria-label="Open Service Tenure" onkeydown="if(event.key === 'Enter' || event.key === ' ') { event.preventDefault(); this.click(); }" onclick="toggleTenure(); playSound('click');">
+            <div class="chevron-up" aria-hidden="true"></div>
+            <span class="tenure-trigger-label">Service Tenure</span>
         </div>
         <button class="page-edge-btn next" type="button" onclick="setDashboardPage(1)" aria-label="Open model guide">Guide</button>
     </div>
